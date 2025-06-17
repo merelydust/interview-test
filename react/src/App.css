@@ -35,3 +35,7 @@
   border-collapse: collapse;
   padding: 10px;
 }
+
+.error {
+  color: red;
+}

@@ -19,11 +19,22 @@ function App() {
     string | null
   >(null);
 
+
+  const [isTeacherError, setIsTeacherError] = useState<boolean>(false);
+  const [isStudentError, setIsStudentError] = useState<boolean>(false);
+
   const handleTeacherSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const target = event.currentTarget;
     const teacherName = target.teacher.value;
+
+    // non-empty check
+    if (teacherName.trim().length < 1) {
+      setIsTeacherError(true);
+      return;
+    }
+
     const id = crypto.randomUUID();
     schoolDispatch?.({
       type: SchoolActionKind.ADD_TEACHER,
@@ -38,6 +49,13 @@ function App() {
 
     const target = event.currentTarget;
     const studentName = target.student.value;
+
+    // non-empty check
+    if (studentName.trim().length < 1) {
+      setIsStudentError(true);
+      return;
+    }
+
     const id = crypto.randomUUID();
     schoolDispatch?.({
       type: SchoolActionKind.ADD_STUDENT,
@@ -137,9 +155,10 @@ function App() {
         <hr></hr>
         <form onSubmit={handleTeacherSubmit}>
           <label htmlFor="teacher">Teacher</label>
-          <input type="text" id="teacher" name="teacher" />
+          <input type="text" id="teacher" name="teacher" onChange={() => setIsTeacherError(false)} />
           <button type="submit">Add Teacher</button>
         </form>
+        {isTeacherError && <div className="error">Invalid Input</div>}
       </div>
       <div className="section">
         <h2>Students</h2>
@@ -183,9 +202,10 @@ function App() {
         <hr></hr>
         <form onSubmit={handleStudentSubmit}>
           <label htmlFor="student" >Student</label>
-          <input type="text" id="student" name="student" />
+          <input type="text" id="student" name="student" onChange={() => setIsStudentError(false)}/>
           <button type="submit">Add Student</button>
         </form>
+        {isStudentError && <div className="error">Invalid Input</div>}
       </div>
     </div>
   );
