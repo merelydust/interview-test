@@ -22,6 +22,13 @@ function App() {
 
   const [isTeacherError, setIsTeacherError] = useState<boolean>(false);
   const [isStudentError, setIsStudentError] = useState<boolean>(false);
+  const [isAssignmentError, setIsAssignmentError] = useState<boolean>(false);
+
+  const [assignmentName, setAssignmentName] = useState<string>("");
+  const [assignmentTeacher, setAssignmentTeacher] = useState<string>("");
+  const [assignmentStudent, setAssignmentStudent] = useState<string>("");
+
+  const [reportDate, setReportDate] = useState<string>("");
 
   const handleTeacherSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -91,6 +98,39 @@ function App() {
     setTeacherEditingId(null);
     setNewAssignedStudentId(null);
   };
+
+  const handleAssignmentSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    // non-empty check
+    if (assignmentName.trim() === ""
+     || assignmentTeacher.trim() === ""
+     || assignmentStudent.trim() === "") {
+      setIsAssignmentError(true);
+      return;
+    }
+
+    schoolDispatch?.({
+      type: SchoolActionKind.ADD_ASSIGNMENT,
+      payload: {
+        id: crypto.randomUUID(),
+        name: assignmentName,
+        teacherId: assignmentTeacher,
+        studentId: assignmentStudent,
+        created_at: new Date().toISOString(),
+      }
+    })
+  }
+
+  const handleGradeAssignment = (id: string, grade: "Pass" | "Fail") => {
+    schoolDispatch?.({
+      type: SchoolActionKind.GRADE_ASSIGNMENT,
+      payload: {
+        id,
+        grade,
+      }
+    })
+  }
+
 
   return (
     <div className="App">
@@ -206,6 +246,84 @@ function App() {
           <button type="submit">Add Student</button>
         </form>
         {isStudentError && <div className="error">Invalid Input</div>}
+      </div>
+      <div className="section">
+        <h2>Assignment</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>TeacherId</th>
+              <th>StudentId</th>
+              <th>Grade</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              school?.assignments.map(a => (
+                <tr>
+                  <td>{a.name}</td>
+                  <td>{a.teacherId}</td>
+                  <td>{a.studentId}</td>
+                  <td>{a.grade || ""}</td>
+                  <td>
+                    {
+                      !a.grade &&
+                        <>
+                          <button onClick={() => handleGradeAssignment(a.id, "Pass")}>Pass</button>
+                          <button onClick={() => handleGradeAssignment(a.id, "Fail")}>Fail</button>
+                        </>
+                    }
+                  </td>
+                </tr>)
+              )
+            }
+          </tbody>
+        </table>
+      </div>
+      <form onSubmit={handleAssignmentSubmit} style={{marginTop: 80}}>
+        <input
+          type="text"
+          placeholder="Assignment Name"
+          value={assignmentName}
+          onChange={e => setAssignmentName(e.target.value)}
+        />
+        <select value={assignmentTeacher} onChange={e => setAssignmentTeacher(e.target.value)}>
+          <option>Select Teacher</option>
+          {
+            school?.teachers.map(t => 
+              <option value={t.id}>{t.name}</option>
+            )
+          }
+        </select>
+          <select value={assignmentStudent} onChange={e => setAssignmentStudent(e.target.value)}>
+          <option value="">Select Students</option>
+          {
+            school?.students.map(s => 
+              <option value={s.id}>{s.name}</option>
+            )
+          }
+        </select>
+        <button type="submit">Submit</button>
+      </form>
+      <hr style={{margin: 40}} />
+      <div className="section">
+        <h2>Report</h2>
+        <label htmlFor="report-date">Date </label>
+        <input
+          id="report-date"
+          placeholder="YYYY-MM-DD"
+          value={reportDate}
+          onChange={e => setReportDate(e.target.value)}
+        />
+        {
+          reportDate.trim().length > 0 &&
+            <div style={{marginTop: 20}}>
+              <span>{school?.assignments.filter(a => a.grade === "Pass" && a.created_at?.startsWith(reportDate)).length}</span>
+              <span> student(s) passed on this day.</span>
+            </div>
+        }
       </div>
     </div>
   );

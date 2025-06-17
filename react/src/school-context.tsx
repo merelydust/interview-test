@@ -11,9 +11,19 @@ export type Teacher = {
   students: string[];
 };
 
+export type Assignment = {
+  id: string;
+  name: string;
+  created_at: string;
+  teacherId: string;
+  studentId: string;
+  grade?: "Pass" | "Fail";
+};
+
 export type InitialState = {
   teachers: Teacher[];
   students: Student[];
+  assignments: Assignment[];
 };
 
 export enum SchoolActionKind {
@@ -21,6 +31,8 @@ export enum SchoolActionKind {
   ADD_STUDENT = "ADD_STUDENT",
   UPDATE_STUDENT = "UPDATE_STUDENT",
   ASSIGN_STUDENT_TO_TEACHER = "ASSIGN_STUDENT_TO_TEACHER",
+  ADD_ASSIGNMENT = "ADD_ASSIGNMENT",
+  GRADE_ASSIGNMENT = "GRADE_ASSIGNMENT",
 }
 
 export type SchoolAction =
@@ -42,7 +54,18 @@ export type SchoolAction =
         teacherId: string;
         studentId: string;
       };
-    };
+    }
+  | {
+    type: SchoolActionKind.ADD_ASSIGNMENT;
+    payload: Assignment;
+  }
+  | {
+    type: SchoolActionKind.GRADE_ASSIGNMENT;
+    payload: {
+      id: string;
+      grade: "Pass" | "Fail";
+    }
+  };
 
 const SchoolContext = createContext<InitialState | null>(null);
 const SchoolDispatchContext =
@@ -100,6 +123,16 @@ export function schoolReducer(
         }
       }
       return { ...state, teachers: updatedTeacher };
+    case SchoolActionKind.ADD_ASSIGNMENT:
+      return {...state, assignments: [...state.assignments, action.payload]}
+    case SchoolActionKind.GRADE_ASSIGNMENT:
+      const updatedAssignments = state.assignments.map(a =>
+        a.id === action.payload.id ?
+        {...a, grade: action.payload.grade}
+        :
+        a
+      )
+      return {...state, assignments: updatedAssignments};
     default:
       return state;
   }
@@ -108,4 +141,5 @@ export function schoolReducer(
 const initialState: InitialState = {
   teachers: [],
   students: [],
+  assignments: [],
 };
